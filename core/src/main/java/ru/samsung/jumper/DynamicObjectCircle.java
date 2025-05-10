@@ -13,6 +13,8 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
+import javax.swing.JLayeredPane;
+
 public class DynamicObjectCircle {
     public static final short CATEGORY_DYNAMIC = 0x0001;
     public static final short CATEGORY_KINEMATIC = 0x0002;
@@ -85,5 +87,9 @@ public class DynamicObjectCircle {
             filter.maskBits |= CATEGORY_KINEMATIC;
         }
         fixture.setFilterData(filter);
+    }
+
+    public Body getBody() {
+        return this.body;
     }
 }
