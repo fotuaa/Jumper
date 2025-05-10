@@ -26,6 +26,12 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private static final float RESPAWN_Y_THRESHOLD = -2f; // Нижняя граница экрана для респавна
     private final Vector2 JUMPER_START_POS = new Vector2(W_WIDTH/2, 4); // Стартовая позиция
 
+    private static final float PLATFORM_DROP_THRESHOLD = W_HEIGHT * 0.6f; // 60% высоты экрана
+    private static final float PLATFORM_RESPAWN_Y = W_HEIGHT + 0.1f; // Выше верхнего края
+    private static final float PLATFORM_DROP_SPEED = 1.5f;
+    private float currentDropSpeed = 0f;
+    private boolean shouldPlatformsMove = false;
+
     //Texture circleRed;
 
     private boolean isTouched = false;
@@ -77,6 +83,23 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             respawnJumper();
         }
 
+        float jumperY = jumper.getBody().getPosition().y;
+
+        // Активируем движение платформ только когда персонаж выше порога
+        shouldPlatformsMove = jumperY > PLATFORM_DROP_THRESHOLD;
+
+        if (shouldPlatformsMove) {
+            // Увеличиваем скорость со временем
+            currentDropSpeed = Math.min(currentDropSpeed + 0.001f, 0.5f);
+            dropPlatforms();
+        } else {
+            // Останавливаем платформы
+            stopPlatforms();
+            currentDropSpeed = 0.1f; // Сбрасываем базовую скорость
+        }
+
+        checkPlatformsBounds();
+
         // события
         jumper.move();
 
@@ -87,6 +110,50 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         batch.begin();
         batch.end();
         world.step(1/60f, 6, 2);
+    }
+
+    private void dropPlatforms() {
+        for (KinematicObject platform : platforms) {
+            if (platform != null && platform.getBody() != null) {
+                Vector2 velocity = platform.getBody().getLinearVelocity();
+                platform.getBody().setLinearVelocity(velocity.x, -currentDropSpeed);
+            }
+        }
+    }
+
+    private void stopPlatforms() {
+        for (KinematicObject platform : platforms) {
+            if (platform != null && platform.getBody() != null) {
+                Vector2 velocity = platform.getBody().getLinearVelocity();
+                platform.getBody().setLinearVelocity(velocity.x, 0); // Нулевая скорость по Y
+            }
+        }
+    }
+
+    private void checkPlatformsBounds() {
+        for (int i = 0; i < platforms.length; i++) {
+            if (platforms[i] != null && platforms[i].getBody() != null
+                && platforms[i].getBody().getPosition().y < -2f) {
+                respawnPlatform(i);
+            }
+        }
+    }
+
+    private void respawnPlatform(int index) {
+        if (platforms[index] != null && platforms[index].getBody() != null) {
+            world.destroyBody(platforms[index].getBody());
+        }
+
+        float randomX = 3 + (float)Math.random() * (W_WIDTH - 6);
+        float randomWidth = 4 + (float)Math.random() * 3;
+
+        platforms[index] = new KinematicObject(
+            world,
+            randomX,
+            PLATFORM_RESPAWN_Y,
+            randomWidth,
+            0.005f
+        );
     }
 
     private void respawnJumper() {

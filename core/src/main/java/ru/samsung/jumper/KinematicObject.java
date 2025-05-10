@@ -56,4 +56,8 @@ public class KinematicObject {
             body.setAngularVelocity(va);
         }
     }
+
+    public Body getBody() {
+        return this.body;
+    }
 }
