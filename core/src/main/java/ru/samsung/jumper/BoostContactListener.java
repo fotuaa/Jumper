@@ -1,5 +1,6 @@
 package ru.samsung.jumper;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -11,15 +12,16 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 public class BoostContactListener implements ContactListener {
     private final Body dynamicBody;
     private final Body[] kinematicBodies;
-    private final float impulseStrength;
+    private final float impulseStrength = 2.5f;
+    Sound snd;
 
-    public BoostContactListener(DynamicObjectCircle dynamic, KinematicObject[] kinematics, float impulseStrength) {
+    public BoostContactListener(DynamicObjectCircle dynamic, KinematicObject[] kinematics, Sound snd) {
         this.dynamicBody = dynamic.body;
         kinematicBodies = new Body[kinematics.length];
         for (int i = 0; i < kinematics.length; i++) {
             kinematicBodies[i] = kinematics[i].body;
         }
-        this.impulseStrength = impulseStrength;
+        this.snd=snd;
     }
 
     private boolean isKinematicBody(Body body) {
@@ -44,8 +46,10 @@ public class BoostContactListener implements ContactListener {
             (bodyB == dynamicBody && isKinematicBody(bodyA))) {
 
             // Придаем импульс вверх
+            dynamicBody.setLinearVelocity(0, 0);
             Vector2 impulse = new Vector2(0, impulseStrength);
             dynamicBody.applyLinearImpulse(impulse, dynamicBody.getWorldCenter(), true);
+            snd.play();
         }
     }
 

@@ -3,6 +3,7 @@ package ru.samsung.jumper;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -21,7 +22,9 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
 
-    private KinematicObject[] platforms = new KinematicObject[20];
+    Sound snd;
+
+    private KinematicObject[] platforms = new KinematicObject[10];
     DynamicObjectCircle jumper;
 
     private static final float RESPAWN_Y_THRESHOLD = -2f; // Нижняя граница экрана для респавна
@@ -37,7 +40,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
     private boolean isTouched = false;
     private float touchX = 0;
-    private float moveSpeed = 1.5f; // Скорость перемещения
+    private float moveSpeed = 3f; // Скорость перемещения
 
     @Override
     public void create() {
@@ -49,18 +52,20 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         world = new World(new Vector2(0, -10), false);
         debugRenderer = new Box2DDebugRenderer();
 
+        snd = Gdx.audio.newSound(Gdx.files.internal("blaster.mp3"));
+
         jumper = new DynamicObjectCircle(world, W_WIDTH/2, 4, 0.4f);
 
         platforms[0] = new KinematicObject(world, 4.5f, 0, 9, 0.005f);
         for (int i = 1; i < platforms.length; i++) {
-            platforms[i] = new KinematicObject(world, MathUtils.random(1f, 8f), i+2.5f, MathUtils.random(1f, 3f), 0.005f);
+            platforms[i] = new KinematicObject(world, MathUtils.random(1f, 8f), i*2.5f+MathUtils.random(-0.5f, 0.5f), MathUtils.random(1f, 3f), 0.005f);
         }
         /*platforms[0] = new KinematicObject(world, 3, 2, 5, 0.005f);
         platforms[1] = new KinematicObject(world, 6, 5, 5, 0.005f);
         platforms[2] = new KinematicObject(world, 3, 9, 5, 0.005f);
         platforms[3] = new KinematicObject(world, 6, 12, 5, 0.005f);*/
 
-        BoostContactListener listener = new BoostContactListener(jumper, platforms, 4f);
+        BoostContactListener listener = new BoostContactListener(jumper, platforms, snd);
         world.setContactListener(listener);
 
         // Устанавливаем InputProcessor
@@ -75,18 +80,34 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             Vector2 jumperPosition = jumper.getBody().getPosition();
 
             // Определяем направление движения
-            if (touchX > W_WIDTH/2/*jumperPosition.x*/) {
+            if (touchX > jumperPosition.x) {
                 // Палец справа - двигаем вправо
                 jumper.getBody().setLinearVelocity(moveSpeed, jumper.getBody().getLinearVelocity().y);
-            } else if (touchX < W_WIDTH/2/*jumperPosition.x*/) {
+            } else if (touchX < jumperPosition.x) {
                 // Палец слева - двигаем влево
                 jumper.getBody().setLinearVelocity(-moveSpeed, jumper.getBody().getLinearVelocity().y);
             }
         }
 
+        // события
         if (jumper.getBody().getPosition().y < RESPAWN_Y_THRESHOLD) {
-            respawnJumper();
+            respawnJumperDown();
         }
+
+        if (jumper.getBody().getPosition().x < -0.5f) {
+            float nowY = jumper.getBody().getPosition().y;
+            float nowX = 9.5f;
+            respawnJumperRight(nowX, nowY);
+
+        }
+        if (jumper.getBody().getPosition().x > 9.5f) {
+            float nowY = jumper.getBody().getPosition().y;
+            float nowX = -0.5f;
+            respawnJumperRight(nowX, nowY);
+        }
+
+
+
 
         float jumperY = jumper.getBody().getPosition().y;
 
@@ -105,7 +126,6 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         checkPlatformsBounds();
 
-        // события
         jumper.move();
 
         // отрисовка
@@ -149,23 +169,34 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             world.destroyBody(platforms[index].getBody());
         }
 
-        float randomX = 3 + (float)Math.random() * (W_WIDTH - 6);
-        float randomWidth = 4 + (float)Math.random() * 3;
+        /*float randomX = 3 + (float)Math.random() * (W_WIDTH - 6);
+        float randomWidth = 4 + (float)Math.random() * 3;*/
 
         platforms[index] = new KinematicObject(world, MathUtils.random(1f, 8f), PLATFORM_RESPAWN_Y, MathUtils.random(1f, 3f), 0.005f);
     }
 
-    private void respawnJumper() {
+    private void respawnJumperDown() {
         // 1. Удаляем старое тело из мира
         world.destroyBody(jumper.getBody());
 
         // 2. Создаем нового джампера в начальной позиции
-        jumper = new DynamicObjectCircle(world,
-            JUMPER_START_POS.x,
-            JUMPER_START_POS.y,
-            0.4f);
+        jumper = new DynamicObjectCircle(world, JUMPER_START_POS.x, JUMPER_START_POS.y, 0.4f);
         // 3. Восстанавливаем обработчик столкновений
-        world.setContactListener(new BoostContactListener(jumper, platforms, 4f));
+        world.setContactListener(new BoostContactListener(jumper, platforms, snd));
+
+        // 4. Останавливаем движение (на всякий случай)
+        jumper.getBody().setLinearVelocity(0, 0);
+        jumper.getBody().setAngularVelocity(0);
+    }
+
+    private void respawnJumperRight(float nowX, float nowY) {
+        // 1. Удаляем старое тело из мира
+        world.destroyBody(jumper.getBody());
+
+        // 2. Создаем нового джампера в начальной позиции
+        jumper = new DynamicObjectCircle(world, nowX, nowY, 0.4f);
+        // 3. Восстанавливаем обработчик столкновений
+        world.setContactListener(new BoostContactListener(jumper, platforms, snd));
 
         // 4. Останавливаем движение (на всякий случай)
         jumper.getBody().setLinearVelocity(0, 0);
