@@ -57,6 +57,22 @@ public class KinematicObject {
         }
     }
 
+    public float getX() {
+        return body.getPosition().x-width/2;
+    }
+
+    public float getY() {
+        return body.getPosition().y-0.5f;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return 0.5f;
+    }
+
     public Body getBody() {
         return this.body;
     }

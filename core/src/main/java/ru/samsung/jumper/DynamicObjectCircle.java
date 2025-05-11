@@ -78,6 +78,9 @@ public class DynamicObjectCircle {
     public float getAngle(){
         return body.getAngle()* MathUtils.radiansToDegrees;
     }
+    public boolean getFlipX() {
+        return body.getLinearVelocity().x > 0;
+    }
 
     public void move(){
         filter = fixture.getFilterData();

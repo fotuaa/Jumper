@@ -12,7 +12,7 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 public class BoostContactListener implements ContactListener {
     private final Body dynamicBody;
     private final Body[] kinematicBodies;
-    private final float impulseStrength = 2.5f;
+    private final float impulseStrength = 4.5f;
     Sound snd;
 
     public BoostContactListener(DynamicObjectCircle dynamic, KinematicObject[] kinematics, Sound snd) {

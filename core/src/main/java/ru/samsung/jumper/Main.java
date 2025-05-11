@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -23,6 +24,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private OrthographicCamera camera;
 
     Sound snd;
+    Texture imgHedgehog;
+    Texture imgLand;
 
     private KinematicObject[] platforms = new KinematicObject[10];
     DynamicObjectCircle jumper;
@@ -30,7 +33,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private static final float RESPAWN_Y_THRESHOLD = -2f; // Нижняя граница экрана для респавна
     private final Vector2 JUMPER_START_POS = new Vector2(W_WIDTH/2, 4); // Стартовая позиция
 
-    private static final float PLATFORM_DROP_THRESHOLD = W_HEIGHT * 0.7f; // 70% высоты экрана
+    private static final float PLATFORM_DROP_THRESHOLD = W_HEIGHT * 0.6f; // 60% высоты экрана
     private static final float PLATFORM_RESPAWN_Y = W_HEIGHT + MathUtils.random(0.1f, 0.3f); // Выше верхнего края
     private static final float PLATFORM_DROP_SPEED = 2f;
     private float currentDropSpeed = 0f;
@@ -53,8 +56,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         debugRenderer = new Box2DDebugRenderer();
 
         snd = Gdx.audio.newSound(Gdx.files.internal("blaster.mp3"));
+        imgHedgehog = new Texture("hedgehog.png");
+        imgLand = new Texture("land.png");
 
-        jumper = new DynamicObjectCircle(world, W_WIDTH/2, 4, 0.4f);
+        jumper = new DynamicObjectCircle(world, W_WIDTH/2, 4, 0.6f);
 
         platforms[0] = new KinematicObject(world, 4.5f, 0, 9, 0.005f);
         for (int i = 1; i < platforms.length; i++) {
@@ -130,9 +135,16 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         // отрисовка
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
-        debugRenderer.render(world, camera.combined);
+      //  debugRenderer.render(world, camera.combined);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        for (int i = 0; i < platforms.length; i++) {
+            batch.draw(imgLand, platforms[i].getX(), platforms[i].getY(),
+                platforms[i].getWidth(),platforms[i].getHeight());
+        }
+        batch.draw(imgHedgehog, jumper.getX(), jumper.getY(),
+            jumper.getWidth()/2, jumper.getHeight()/2, jumper.getWidth(),jumper.getHeight(),
+            1, 1, 0, 0, 0, 512, 512, jumper.getFlipX(), false);
         batch.end();
         world.step(1/60f, 6, 2);
     }
@@ -180,7 +192,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         world.destroyBody(jumper.getBody());
 
         // 2. Создаем нового джампера в начальной позиции
-        jumper = new DynamicObjectCircle(world, JUMPER_START_POS.x, JUMPER_START_POS.y, 0.4f);
+        jumper = new DynamicObjectCircle(world, JUMPER_START_POS.x, JUMPER_START_POS.y, 0.6f);
         // 3. Восстанавливаем обработчик столкновений
         world.setContactListener(new BoostContactListener(jumper, platforms, snd));
 
@@ -194,7 +206,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         world.destroyBody(jumper.getBody());
 
         // 2. Создаем нового джампера в начальной позиции
-        jumper = new DynamicObjectCircle(world, nowX, nowY, 0.4f);
+        jumper = new DynamicObjectCircle(world, nowX, nowY, 0.6f);
         // 3. Восстанавливаем обработчик столкновений
         world.setContactListener(new BoostContactListener(jumper, platforms, snd));
 
