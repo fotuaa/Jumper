@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Box2D;
@@ -20,15 +21,15 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
 
-    private KinematicObject[] platforms = new KinematicObject[4];
+    private KinematicObject[] platforms = new KinematicObject[20];
     DynamicObjectCircle jumper;
 
     private static final float RESPAWN_Y_THRESHOLD = -2f; // Нижняя граница экрана для респавна
     private final Vector2 JUMPER_START_POS = new Vector2(W_WIDTH/2, 4); // Стартовая позиция
 
-    private static final float PLATFORM_DROP_THRESHOLD = W_HEIGHT * 0.6f; // 60% высоты экрана
-    private static final float PLATFORM_RESPAWN_Y = W_HEIGHT + 0.1f; // Выше верхнего края
-    private static final float PLATFORM_DROP_SPEED = 1.5f;
+    private static final float PLATFORM_DROP_THRESHOLD = W_HEIGHT * 0.7f; // 70% высоты экрана
+    private static final float PLATFORM_RESPAWN_Y = W_HEIGHT + MathUtils.random(0.1f, 0.3f); // Выше верхнего края
+    private static final float PLATFORM_DROP_SPEED = 2f;
     private float currentDropSpeed = 0f;
     private boolean shouldPlatformsMove = false;
 
@@ -50,10 +51,14 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         jumper = new DynamicObjectCircle(world, W_WIDTH/2, 4, 0.4f);
 
-        platforms[0] = new KinematicObject(world, 3, 2, 5, 0.005f);
+        platforms[0] = new KinematicObject(world, 4.5f, 0, 9, 0.005f);
+        for (int i = 1; i < platforms.length; i++) {
+            platforms[i] = new KinematicObject(world, MathUtils.random(1f, 8f), i+2.5f, MathUtils.random(1f, 3f), 0.005f);
+        }
+        /*platforms[0] = new KinematicObject(world, 3, 2, 5, 0.005f);
         platforms[1] = new KinematicObject(world, 6, 5, 5, 0.005f);
         platforms[2] = new KinematicObject(world, 3, 9, 5, 0.005f);
-        platforms[3] = new KinematicObject(world, 6, 12, 5, 0.005f);
+        platforms[3] = new KinematicObject(world, 6, 12, 5, 0.005f);*/
 
         BoostContactListener listener = new BoostContactListener(jumper, platforms, 4f);
         world.setContactListener(listener);
@@ -70,10 +75,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             Vector2 jumperPosition = jumper.getBody().getPosition();
 
             // Определяем направление движения
-            if (touchX > jumperPosition.x) {
+            if (touchX > W_WIDTH/2/*jumperPosition.x*/) {
                 // Палец справа - двигаем вправо
                 jumper.getBody().setLinearVelocity(moveSpeed, jumper.getBody().getLinearVelocity().y);
-            } else if (touchX < jumperPosition.x) {
+            } else if (touchX < W_WIDTH/2/*jumperPosition.x*/) {
                 // Палец слева - двигаем влево
                 jumper.getBody().setLinearVelocity(-moveSpeed, jumper.getBody().getLinearVelocity().y);
             }
@@ -90,7 +95,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         if (shouldPlatformsMove) {
             // Увеличиваем скорость со временем
-            currentDropSpeed = Math.min(currentDropSpeed + 0.001f, 0.5f);
+            currentDropSpeed = Math.min(currentDropSpeed + 2f, 7.5f);
             dropPlatforms();
         } else {
             // Останавливаем платформы
@@ -147,13 +152,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         float randomX = 3 + (float)Math.random() * (W_WIDTH - 6);
         float randomWidth = 4 + (float)Math.random() * 3;
 
-        platforms[index] = new KinematicObject(
-            world,
-            randomX,
-            PLATFORM_RESPAWN_Y,
-            randomWidth,
-            0.005f
-        );
+        platforms[index] = new KinematicObject(world, MathUtils.random(1f, 8f), PLATFORM_RESPAWN_Y, MathUtils.random(1f, 3f), 0.005f);
     }
 
     private void respawnJumper() {
