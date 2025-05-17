@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -22,6 +23,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
+    private BitmapFont font50, font70;
 
     Sound snd;
     Texture imgHedgehog;
@@ -38,6 +40,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private static final float PLATFORM_DROP_SPEED = 2f;
     private float currentDropSpeed = 0f;
     private boolean shouldPlatformsMove = false;
+    private int countMetrs = 0;
 
     //Texture circleRed;
 
@@ -51,6 +54,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, W_WIDTH, W_HEIGHT);
         touch = new Vector3();
+        font50 = new BitmapFont(Gdx.files.internal("fonts/comic50.fnt"));
+        font70 = new BitmapFont(Gdx.files.internal("fonts/comic70.fnt"));
         Box2D.init();
         world = new World(new Vector2(0, -10), false);
         debugRenderer = new Box2DDebugRenderer();
@@ -85,10 +90,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             Vector2 jumperPosition = jumper.getBody().getPosition();
 
             // Определяем направление движения
-            if (touchX > jumperPosition.x) {
+            if (touchX > W_WIDTH/2) {
                 // Палец справа - двигаем вправо
                 jumper.getBody().setLinearVelocity(moveSpeed, jumper.getBody().getLinearVelocity().y);
-            } else if (touchX < jumperPosition.x) {
+            } else if (touchX < W_WIDTH/2) {
                 // Палец слева - двигаем влево
                 jumper.getBody().setLinearVelocity(-moveSpeed, jumper.getBody().getLinearVelocity().y);
             }
@@ -113,8 +118,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
 
 
-
         float jumperY = jumper.getBody().getPosition().y;
+        if (jumperY > countMetrs) {
+            countMetrs = (int) jumperY;
+        }
 
         // Активируем движение платформ только когда персонаж выше порога
         shouldPlatformsMove = jumperY > PLATFORM_DROP_THRESHOLD;
@@ -133,11 +140,14 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         jumper.move();
 
+
+
         // отрисовка
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
       //  debugRenderer.render(world, camera.combined);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+        font50.draw(batch, "SCORE: "+ countMetrs, 1 ,1 );
         for (int i = 0; i < platforms.length; i++) {
             batch.draw(imgLand, platforms[i].getX(), platforms[i].getY(),
                 platforms[i].getWidth(),platforms[i].getHeight());
@@ -145,6 +155,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         batch.draw(imgHedgehog, jumper.getX(), jumper.getY(),
             jumper.getWidth()/2, jumper.getHeight()/2, jumper.getWidth(),jumper.getHeight(),
             1, 1, 0, 0, 0, 512, 512, jumper.getFlipX(), false);
+
         batch.end();
         world.step(1/60f, 6, 2);
     }
@@ -199,6 +210,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         // 4. Останавливаем движение (на всякий случай)
         jumper.getBody().setLinearVelocity(0, 0);
         jumper.getBody().setAngularVelocity(0);
+        countMetrs = 0;
     }
 
     private void respawnJumperRight(float nowX, float nowY) {
@@ -219,6 +231,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     @Override
     public void dispose() {
         batch.dispose();
+        font50.dispose();
+        font70.dispose();
     }
 
     // Методы InputProcessor
