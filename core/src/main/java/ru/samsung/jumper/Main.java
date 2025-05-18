@@ -18,11 +18,13 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 public class Main extends ApplicationAdapter implements InputProcessor {
     public static final float W_WIDTH = 9, W_HEIGHT = 16;
+    public static final float SCR_WIDTH = 540, SCR_HEIGHT = 960;
     private SpriteBatch batch;
     private Vector3 touch;
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
+    private OrthographicCamera cameraText;
     private BitmapFont font50, font70;
 
     Sound snd;
@@ -41,7 +43,11 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private static final float PLATFORM_DROP_SPEED = 2f;
     private float currentDropSpeed = 0f;
     private boolean shouldPlatformsMove = false;
-    private int countMetrs = 0;
+    private float countMetrs;
+    private float oldPlatformY;
+    private float oldVelocity;
+    private float newVelocity;
+
 
     //Texture circleRed;
 
@@ -53,7 +59,9 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     public void create() {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
+        cameraText = new OrthographicCamera();
         camera.setToOrtho(false, W_WIDTH, W_HEIGHT);
+        cameraText.setToOrtho(false, SCR_WIDTH, SCR_HEIGHT);
         touch = new Vector3();
         font50 = new BitmapFont(Gdx.files.internal("fonts/comic50.fnt"));
         font70 = new BitmapFont(Gdx.files.internal("fonts/comic70.fnt"));
@@ -83,6 +91,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         // Устанавливаем InputProcessor
         Gdx.input.setInputProcessor(this);
+        oldPlatformY = platforms[1].getY();
     }
 
     @Override
@@ -122,9 +131,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
 
         float jumperY = jumper.getBody().getPosition().y;
-        if (jumperY > countMetrs) {
-            countMetrs = (int) jumperY;
-        }
+        countMetrs = countMetrs + Math.abs(countMetrs - jumper.getY());
 
         // Активируем движение платформ только когда персонаж выше порога
         shouldPlatformsMove = jumperY > PLATFORM_DROP_THRESHOLD;
@@ -133,6 +140,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             // Увеличиваем скорость со временем
             currentDropSpeed = Math.min(currentDropSpeed + 2f, 7.5f);
             dropPlatforms();
+
         } else {
             // Останавливаем платформы
             stopPlatforms();
@@ -143,15 +151,18 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         jumper.move();
 
-
+        oldVelocity=jumper.body.getLinearVelocity().y;
+        if ((jumper.body.getLinearVelocity().y>0 && oldVelocity<=0) || (jumper.body.getLinearVelocity().y<0 && oldVelocity>=0)){
+            countMetrs=countMetrs+Math.abs(countMetrs-jumper.getY());
+        }
 
         // отрисовка
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
-      //  debugRenderer.render(world, camera.combined);
+        //debugRenderer.render(world, camera.combined);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         batch.draw(imgBackGround, 0, 0, 9, 16);
-        font50.draw(batch, "SCORE: "+ countMetrs, 4.5f, 8);
+
         for (int i = 0; i < platforms.length; i++) {
             batch.draw(imgLand, platforms[i].getX(), platforms[i].getY(),
                 platforms[i].getWidth(),platforms[i].getHeight());
@@ -159,11 +170,20 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         batch.draw(imgHedgehog, jumper.getX(), jumper.getY(),
             jumper.getWidth()/2, jumper.getHeight()/2, jumper.getWidth(),jumper.getHeight(),
             1, 1, 0, 0, 0, 512, 512, jumper.getFlipX(), false);
-
         batch.end();
         world.step(1/60f, 6, 2);
+
+        batch.setProjectionMatrix(cameraText.combined);
+        batch.begin();
+        font50.draw(batch, "SCORE: "+ countMetrs, 10, SCR_HEIGHT-10);
+        batch.end();
     }
 
+   /* private void countMeters(){
+        countMetrs += platforms[1].getY()-oldPlatformY;
+        oldPlatformY = platforms[1].getY();
+    }
+*/
     private void dropPlatforms() {
         for (KinematicObject platform : platforms) {
             if (platform != null && platform.getBody() != null) {
@@ -195,6 +215,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         if (platforms[index] != null && platforms[index].getBody() != null) {
             world.destroyBody(platforms[index].getBody());
         }
+     //   oldPlatformY = platforms[1].getY();
 
         /*float randomX = 3 + (float)Math.random() * (W_WIDTH - 6);
         float randomWidth = 4 + (float)Math.random() * 3;*/
@@ -248,6 +269,15 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         isTouched = true;
         return true;
     }
+
+
+
+
+
+
+
+
+
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {

@@ -42,8 +42,8 @@ public class BoostContactListener implements ContactListener {
         Body bodyB = fixtureB.getBody();
 
         // Проверяем контакт нашего динамического тела с любым из кинематических
-        if ((bodyA == dynamicBody && isKinematicBody(bodyB)) ||
-            (bodyB == dynamicBody && isKinematicBody(bodyA))) {
+        if ((bodyA == dynamicBody && isKinematicBody(bodyB)) && bodyA.getPosition().y > bodyB.getPosition().y ||
+            (bodyB == dynamicBody && isKinematicBody(bodyA)) && bodyB.getPosition().y > bodyA.getPosition().y) {
 
             // Придаем импульс вверх
             dynamicBody.setLinearVelocity(0, 0);
