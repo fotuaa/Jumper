@@ -28,6 +28,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     Sound snd;
     Texture imgHedgehog;
     Texture imgLand;
+    Texture imgBackGround;
 
     private KinematicObject[] platforms = new KinematicObject[10];
     DynamicObjectCircle jumper;
@@ -60,9 +61,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         world = new World(new Vector2(0, -10), false);
         debugRenderer = new Box2DDebugRenderer();
 
-        snd = Gdx.audio.newSound(Gdx.files.internal("blaster.mp3"));
+        snd = Gdx.audio.newSound(Gdx.files.internal("blasters.mp3"));
         imgHedgehog = new Texture("hedgehog.png");
         imgLand = new Texture("land.png");
+        imgBackGround = new Texture("Backgraund.png");
 
         jumper = new DynamicObjectCircle(world, W_WIDTH/2, 4, 0.6f);
 
@@ -147,7 +149,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
       //  debugRenderer.render(world, camera.combined);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        font50.draw(batch, "SCORE: "+ countMetrs, 1 ,1 );
+        batch.draw(imgBackGround, 0, 0, 9, 16);
+        font50.draw(batch, "SCORE: "+ countMetrs, 4.5f, 8);
         for (int i = 0; i < platforms.length; i++) {
             batch.draw(imgLand, platforms[i].getX(), platforms[i].getY(),
                 platforms[i].getWidth(),platforms[i].getHeight());
