@@ -57,6 +57,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         touch = new Vector3();
         font50 = new BitmapFont(Gdx.files.internal("fonts/comic50.fnt"));
         font70 = new BitmapFont(Gdx.files.internal("fonts/comic70.fnt"));
+
         Box2D.init();
         world = new World(new Vector2(0, -10), false);
         debugRenderer = new Box2DDebugRenderer();
