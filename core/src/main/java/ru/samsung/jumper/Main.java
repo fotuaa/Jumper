@@ -46,7 +46,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
     private float countMetrs;
     private float oldPlatformY;
     private float oldVelocity;
-    private float newVelocity;
+    private float altitude = 0f;
 
 
     //Texture circleRed;
@@ -131,7 +131,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
 
         float jumperY = jumper.getBody().getPosition().y;
-        countMetrs = countMetrs + Math.abs(countMetrs - jumper.getY());
+     //   countMetrs = countMetrs + Math.abs(countMetrs - jumper.getY());
 
         // Активируем движение платформ только когда персонаж выше порога
         shouldPlatformsMove = jumperY > PLATFORM_DROP_THRESHOLD;
@@ -140,6 +140,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
             // Увеличиваем скорость со временем
             currentDropSpeed = Math.min(currentDropSpeed + 2f, 7.5f);
             dropPlatforms();
+            altitude += currentDropSpeed;
 
         } else {
             // Останавливаем платформы
@@ -151,10 +152,10 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         jumper.move();
 
-        oldVelocity=jumper.body.getLinearVelocity().y;
         if ((jumper.body.getLinearVelocity().y>0 && oldVelocity<=0) || (jumper.body.getLinearVelocity().y<0 && oldVelocity>=0)){
             countMetrs=countMetrs+Math.abs(countMetrs-jumper.getY());
         }
+        oldVelocity=jumper.body.getLinearVelocity().y;
 
         // отрисовка
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
@@ -175,7 +176,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
         batch.setProjectionMatrix(cameraText.combined);
         batch.begin();
-        font50.draw(batch, "SCORE: "+ countMetrs, 10, SCR_HEIGHT-10);
+        font50.draw(batch, "SCORE: "+ Math.round(altitude/100)/*countMetrs*/, 10, SCR_HEIGHT-10);
         batch.end();
     }
 
@@ -235,7 +236,8 @@ public class Main extends ApplicationAdapter implements InputProcessor {
         // 4. Останавливаем движение (на всякий случай)
         jumper.getBody().setLinearVelocity(0, 0);
         jumper.getBody().setAngularVelocity(0);
-        countMetrs = 0;
+        //countMetrs = 0;
+        altitude=0;
     }
 
     private void respawnJumperRight(float nowX, float nowY) {
