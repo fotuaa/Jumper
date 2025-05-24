@@ -1,6 +1,6 @@
 package ru.samsung.jumper;
 
-import static ru.samsung.jumper.Main.W_WIDTH;
+import static ru.samsung.jumper.ScreenGame.W_WIDTH;
 
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;

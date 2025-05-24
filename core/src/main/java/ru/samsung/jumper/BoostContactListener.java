@@ -1,5 +1,7 @@
 package ru.samsung.jumper;
 
+import static ru.samsung.jumper.Main.isSoundOn;
+
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -49,7 +51,8 @@ public class BoostContactListener implements ContactListener {
             dynamicBody.setLinearVelocity(0, 0);
             Vector2 impulse = new Vector2(0, impulseStrength);
             dynamicBody.applyLinearImpulse(impulse, dynamicBody.getWorldCenter(), true);
-            snd.play();
+            if (isSoundOn)
+                snd.play();
         }
     }
 
